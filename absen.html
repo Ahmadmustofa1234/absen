@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Reader</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- HTML5 QR Code JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html5-qrcode/2.3.8/html5-qrcode.min.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">SCAN QR CODE</h1>
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <!-- QR Code Scanner -->
+                <div id="reader" style="width: 100%;"></div>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-6 text-center">
+                <h5>QR Code Result:</h5>
+                <div id="result" class="alert alert-info">Scan QR Code nya disini</div>
+            </div>
+        </div>
+        <div class="row justify-content-center mt-3">
+            <div class="col-md-6 text-center">
+                <!-- Buttons to switch cameras -->
+                <button id="startBackCamera" class="btn btn-primary m-2">Kamera Belakang</button>
+                <button id="startFrontCamera" class="btn btn-secondary m-2">Kamera Depan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS (Optional) -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+    <script>
+        let html5QrCode;
+
+        // Function to be executed on successful scan
+        function onScanSuccess(decodedText, decodedResult) {
+            document.getElementById('result').innerHTML = `Scanned result: ${decodedText}`;
+
+            // Check if the scanned text is a valid URL
+            try {
+                const url = new URL(decodedText);
+                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                    // Redirect to the URL
+                    window.location.href = decodedText;
+                }
+            } catch (e) {
+                console.log('Scanned text is not a valid URL');
+            }
+        }
+
+        // Function to handle errors during scanning
+        function onScanError(errorMessage) {
+            console.log(errorMessage);
+        }
+
+        // Function to start scanning with the selected camera
+        function startScanning(facingMode) {
+            if (html5QrCode) {
+                // Stop the previous scanner if it's already running
+                html5QrCode.stop().then(() => {
+                    console.log("QR scanner stopped.");
+                }).catch(err => {
+                    console.error("Unable to stop QR scanner.", err);
+                });
+            }
+
+            html5QrCode = new Html5Qrcode("reader");
+            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+
+            html5QrCode.start({ facingMode: facingMode }, config, onScanSuccess, onScanError)
+                .catch(err => {
+                    console.error(`Error starting QR scanner with ${facingMode} camera: ${err}`);
+                    document.getElementById('result').innerHTML = `Error: ${err}`;
+                });
+        }
+
+        // Event listeners for buttons
+        document.getElementById("startBackCamera").addEventListener("click", () => {
+            startScanning("environment");
+        });
+
+        document.getElementById("startFrontCamera").addEventListener("click", () => {
+            startScanning("user");
+        });
+
+        // Start with the back camera by default
+        startScanning("environment");
+    </script>
+</body>
+</html>
